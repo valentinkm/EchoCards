@@ -10,7 +10,6 @@ def find_device_id(device_name_substring):
             return idx
     return None
 
-
 # Record audio:
 def record_audio(filename, duration, samplerate, device_id):
     print("Recording...")
