@@ -5,67 +5,57 @@ from langchain.chat_models import ChatOpenAI
 from langchain.chains.summarize import load_summarize_chain
 load_dotenv()
 
-llm = ChatOpenAI(temperature=0.7, model_name="gpt-3.5-turbo-16k-0613")
+llm = ChatOpenAI(temperature=0.7, model_name="gpt-4")
 
 chain = load_summarize_chain(llm, chain_type="refine")
 
-prompt_template = """You are an dilligint research student. Your are given slides of a lecture on {topic}.\n
-Lecture: {cleaned_slides}\n
-Supplement these notes with context from the following transcript of the lecture. Do not leave anything out. 
-Identify which slides the speaker giving the lecture is referring to (starting with the first slides, advancing step by step) \
-and add all the remarks and points made by the lecturer to the respective slide, if the points are not already explicitly contained in the slide. \
-{text}
-Format:\
-    - *Slide Header and Number*: Clearly mention the slide header along with its number.\
-    - *Slide Content*: List the original content of the slide in bullet points. Use Markdown formatting like **bold** or *italic* to emphasize key points.\
-    - *Speaker's Remarks*: Include any additional points or elaborations made by the speaker during the lecture, formatted in bullet points.\
-Example:\
-   Slide 15: **Cumulative Culture?**
-    - *Slide Content*:
-        - Requires reliable and faithful social transmission.\
-        - Requires imitative learning and sophisticated language.\
-        - Individual learning through emulative learning does not allow for a ratchet effect across generations.\
-- *Speaker's Remarks*:\
-        - Cultural fidelity ensures less distortion in passing down beliefs.\
-        - Sophisticated language extends beyond mimicry and enables abstract thinking.\
-        - The "ratchet effect" signifies incremental cultural growth, which is limited without it.\
+prompt_template = """You are an dilligint research student. Your are given a generated transcript of a lecture on {topic}.\n
+Transcript:\
+{text}\
+Step by step extract all information from the transcript and convert it into a clean and complete document with highlighted key concepts, theories, and definitions.\
+Use Markdown formatting. Use a question and answer format that can be used to study with active recall for an exam.\
+Do not leave anything out and do not add anyting extra.\
+Example Format: (use this intendation as well):\
+'''- How does Language facilitate cultural learning?\
+    - Language allows humans to clearly communicate ideas, especially complicated ones\
+    - Human language is unique in having a complex grammar and syntax, as well as a rich vocabulary\
+    - It is necessary for successful and precise transmission of cultural ideas\
+        - Allows for cumulative cultural learning'''\
 Tone: scientific\
 Task:\
-    - Slide-to-Slide Mapping: Map the content of the transcript to individual slides in a lecture presentation. Identify which points from the transcript correspond to each slide.\
+    - Use a a question and answer format to extract information from the transcript.\
     - Highlight Key Concepts: Emphasize crucial theories, definitions, and concepts using Markdown formatting like bold or italic.\
     - Ensure Completeness: Incorporate all bullet points, sub-points, and other nested lists from the transcript without omitting any content.\
-    - Work Step-by-Step: Methodically work through the transcript, slide by slide, to ensure that the final document is both accurate and complete.\
     - Do Not Add Extra Material: Keep the lecture notes faithful to the original transcript, avoiding any addition, removal, or modification of the substance of the content.\
-This task is designed to facilitate the creation of an organized set of lecture notes that serve as an effective study and reference tool.\
+    - Work Step-by-Step: Methodically work through the transcript, slide by slide, to ensure that the final document is both accurate and complete.\
+This task is designed to facilitate the creation of complete set of lecture notes that serve as an effective study and reference tool.\
 LECTURE NOTES:"""
 prompt = PromptTemplate.from_template(prompt_template)
 
 topic = "Methods of Cultural Psychology"
 
 refine_template = (
-    """You are an dilligint research student. Your are given slides of a lecture on {topic}.\n
-    Lecture: {cleaned_slides}\n
-    Your are provided with a version of the slides that is already supplemented with notes from the speaker transcript of the lecture.\n
-    Existing notes with some overlap: {existing_answer}\n
-    Additional lecture context is provided below.\n
-    Your goal is to continue supplementing the existing slides with the additional lecture transcript provided below in the same manner.\n
+    """You are a diligent research student. You are given a generated transcript of a lecture on {topic}.\n
+    We are given a question answer style notes up to a point of this lecutre\n
+    Existing Q&A Notes: {existing_answer}\n
+    Your goal is to continue supplementing the existing Q&A notes with additional context from the continued lecture transcript provided below.\n
     ------------\n
     {text}\n
     ------------\n
-    Supplement the existing notes with information from the additional lecture transcript, slide-by-slide. Do NOT omit any details and do NOT make up extra material.\n
-    Format:\
-        - *Slide Header and Number*: Clearly mention the slide header along with its number.\
-        - *Slide Content*: List the original content of the slide in bullet points. Use Markdown formatting like **bold** or *italic* to emphasize key points.\
-        - *Speaker's Remarks*: Include any additional points or elaborations made by the speaker during the lecture, formatted in bullet points.\
-    Tone: Scientific\
+    Example Format: (use this intendation as well):\
+    '''- How does Language facilitate cultural learning?\
+        - Language allows humans to clearly communicate ideas, especially complicated ones\
+        - Human language is unique in having a complex grammar and syntax, as well as a rich vocabulary\
+        - It is necessary for successful and precise transmission of cultural ideas\
+            - Allows for cumulative cultural learning'''\
     Task:\
-        - Map the new lecture context to existing notes\
-        - Emphasize crucial theories, definitions, and concepts\
-        - Ensure completeness by incorporating all points from the transcript\
-        - Work step-by-step, mapping each part of the lecture to corresponding slides\
-    This task is designed to facilitate the creation of an organized set of lecture notes that serve as an effective study and reference tool."""
+    - Use a Q&A format to extract information from the transcript.\
+    - Highlight Key Concepts: Emphasize crucial theories, definitions, and concepts using Markdown formatting like bold or italic.\
+    - Ensure Completeness: Incorporate all bullet points, sub-points, and other nested lists from the transcript without omitting any content.\
+    - Do Not Add Extra Material: Keep the lecture notes faithful to the original transcript, avoiding any addition, removal, or modification of the substance of the content.\
+    - Work Step-by-Step: Methodically work through the transcript, slide by slide, to ensure that the final document is both accurate and complete.\
+This task is designed to facilitate the creation of complete set of lecture notes that serve as an effective study and reference tool."""
 )
-
 
 refine_prompt = PromptTemplate.from_template(refine_template)
 chain = load_summarize_chain(
@@ -78,13 +68,13 @@ chain = load_summarize_chain(
     output_key="output_text",
 )
 
-result = chain({"input_documents":docs, "cleaned_slides":cleaned_slides, "topic":topic}, return_only_outputs=False)
+result = chain({"input_documents":docs, "topic":topic}, return_only_outputs=False)
 
 
-intermediate_text = "\n".join(result['intermediate_steps'])
+intermediate_text = "\n".join(result[''])
 output_text = result['output_text']
-combined_text = f"## Intermediate Steps\n{intermediate_text}\n\n## Output Text\n{output_text}"
-with open("result_output.md", "w", encoding="utf-8") as f:
-    f.write(combined_text)
+qa_transcript = f"{intermediate_text}\n\n{output_text}"
+with open("qa_transcript.md", "w", encoding="utf-8") as f:
+    f.write(qa_transcript)
 
 

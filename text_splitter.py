@@ -28,20 +28,3 @@ def split_transcript(transcript_file):
     return docs
 docs = split_transcript(transcript_file)
 
-# Initialize an empty string to hold all the content
-all_slides = ""
-
-# Loop through each page in the pages list
-for i, page in enumerate(pages):
-    all_slides += f"Page {i + 1}:\n"
-    all_slides += page.page_content
-    all_slides += "\n\n"
-
-with open("all_slides.txt", 'w') as f:
-    f.write(all_slides)
-
-import nltk
-text = all_slides
-tokens = nltk.word_tokenize(text)
-len(tokens)
-
