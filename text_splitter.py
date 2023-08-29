@@ -14,17 +14,9 @@ r_splitter = RecursiveCharacterTextSplitter(
 )
 transcript_file = "files/transcript.txt"
 
-loader = TextLoader(transcript_file)
-data = loader.load()
-
-def load_transcript(transcript_file):
+# create function of the above
+def load_split_transcript(transcript_file):
     loader = TextLoader(transcript_file)
     data = loader.load()
-    return data
-
-def split_transcript(transcript_file):
-    data = load_transcript(transcript_file)
     docs = r_splitter.split_documents(data)
     return docs
-docs = split_transcript(transcript_file)
-
