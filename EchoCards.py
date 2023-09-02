@@ -3,7 +3,7 @@ from recorder import record_audio, find_device_id
 from transcriber import transcribe_audio
 from text_splitter import load_split_transcript, r_splitter
 from text_converter import generate_qa_transcript
-from anki_converter import reformat_for_anki_with_tags
+from anki_converter import qa2anki
 
 
 def handle_record(args):
@@ -27,7 +27,7 @@ def handle_transcript2anki(args):
     qa_transcript = generate_qa_transcript(docs, topic)
     
     # Step 3: Convert `qa_transcript` to Anki Importable Text File
-    anki_formatted_text = reformat_for_anki_with_tags(qa_transcript)
+    anki_formatted_text = qa2anki(qa_transcript)
     
     # Save it as a text file
     with open("anki_import.txt", 'w', encoding='utf-8') as f:
