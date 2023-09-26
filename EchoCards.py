@@ -1,7 +1,7 @@
 import argparse
 from recorder import record_audio, find_device_id
 from transcriber import transcribe_audio
-from text_splitter import load_split_transcript, r_splitter
+from text_splitter import split_transcript, r_splitter
 from text_converter import generate_qa_transcript
 from anki_converter import qa2anki
 
@@ -21,7 +21,7 @@ def handle_transcript2anki(args):
     # Load and Split the Transcript
     transcript_file = args.transcript_file  # Assuming this is passed as an argument
     topic = args.topic
-    docs = load_split_transcript(transcript_file)
+    docs = split_transcript(transcript_file)
     
     # Step 2: Convert Text to `qa_transcript`
     qa_transcript = generate_qa_transcript(docs, topic)
